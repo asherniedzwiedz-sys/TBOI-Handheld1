@@ -1,0 +1,365 @@
+<title>Undercroft</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=Silkscreen&display=swap">
+<style>
+/* Layout: one handheld-shaped column: screen on top, controls under it, fits a phone screen */
+:root {
+  --room: #141216;
+  --shell: #221e26;
+  --shell-edge: #322c38;
+  --bezel: #0a090b;
+  --ink: #efe6dc;
+  --muted: #a3978c;
+  --ember: #f2904a;
+  --ember-deep: #c4502a;
+  --key: #3b3442;
+  --key-down: #57203a;
+  --font-display: "Silkscreen", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  --font-body: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --dp: clamp(104px, 30vw, 138px);
+  --ab: clamp(48px, 14vw, 64px);
+  color-scheme: dark;
+}
+html, body { height: 100%; }
+body {
+  background: var(--room);
+  color: var(--ink);
+  font-family: var(--font-body);
+  -webkit-text-size-adjust: 100%;
+}
+.console {
+  max-width: 540px;
+  margin: 0 auto;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 14px 20px;
+  display: grid;
+  gap: 14px;
+}
+.top { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.brand { display: grid; gap: 2px; min-width: 0; }
+h1 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: 1.6rem;
+  letter-spacing: 0.06em;
+  color: var(--ember);
+  text-wrap: balance;
+}
+.tag { margin: 0; font-size: 0.8rem; color: var(--muted); }
+.chip {
+  font: 600 0.78rem var(--font-body);
+  color: var(--ink);
+  background: var(--key);
+  border: 1px solid var(--shell-edge);
+  border-radius: 999px;
+  padding: 8px 14px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.chip[aria-pressed="true"] { background: var(--ember-deep); border-color: var(--ember); }
+.chip:focus-visible, .key:focus-visible { outline: 2px solid var(--ember); outline-offset: 2px; }
+.bezel {
+  position: relative;
+  background: var(--bezel);
+  border: 1px solid var(--shell-edge);
+  border-radius: 14px;
+  padding: 10px;
+}
+canvas {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  aspect-ratio: 256 / 240;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+  background: #000;
+  border-radius: 4px;
+}
+.status {
+  position: absolute;
+  inset: 10px;
+  display: grid;
+  place-items: center;
+  margin: 0;
+  padding: 16px;
+  text-align: center;
+  font-family: var(--font-display);
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+.status[hidden] { display: none; }
+.pad {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 8px;
+  background: var(--shell);
+  border: 1px solid var(--shell-edge);
+  border-radius: 18px;
+  padding: 14px 10px;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+.dpad {
+  width: var(--dp);
+  height: var(--dp);
+  display: grid;
+  grid-template: repeat(3, 1fr) / repeat(3, 1fr);
+  touch-action: none;
+}
+.arm, .hub { background: var(--key); border: 1px solid var(--shell-edge); }
+.arm.up { grid-area: 1 / 2; border-radius: 8px 8px 0 0; border-bottom: 0; }
+.arm.left { grid-area: 2 / 1; border-radius: 8px 0 0 8px; border-right: 0; }
+.hub { grid-area: 2 / 2; border: 0; }
+.arm.right { grid-area: 2 / 3; border-radius: 0 8px 8px 0; border-left: 0; }
+.arm.down { grid-area: 3 / 2; border-radius: 0 0 8px 8px; border-top: 0; }
+.dpad.on-up .arm.up, .dpad.on-down .arm.down, .dpad.on-left .arm.left, .dpad.on-right .arm.right { background: var(--key-down); }
+.meta { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+.key {
+  font-family: var(--font-display);
+  color: var(--ink);
+  background: var(--key);
+  border: 1px solid var(--shell-edge);
+  cursor: pointer;
+  touch-action: none;
+}
+.key.down { background: var(--key-down); }
+.pill { font-size: 0.62rem; letter-spacing: 0.08em; border-radius: 999px; padding: 8px 10px; min-width: 64px; }
+.ab { display: grid; grid-template-columns: var(--ab) var(--ab); grid-template-rows: calc(var(--ab) * 0.45) var(--ab); gap: 0 8px; }
+.round { width: var(--ab); height: var(--ab); border-radius: 50%; font-size: 1.1rem; }
+.round.a { grid-column: 2; grid-row: 1 / span 2; align-self: start; background: var(--ember-deep); border-color: var(--ember); }
+.round.a.down { background: var(--key-down); }
+.round.b { grid-column: 1; grid-row: 2; }
+.help { margin: 0; display: grid; gap: 6px; font-size: 0.86rem; line-height: 1.5; color: var(--muted); }
+.help b { color: var(--ink); font-weight: 600; }
+.kbd { display: none; }
+@media (hover: hover) and (pointer: fine) { .kbd { display: block; } }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+
+<main class="console">
+  <header class="top">
+    <div class="brand">
+      <h1>UNDERCROFT</h1>
+      <p class="tag">Original NES roguelite. Five floors down, then out.</p>
+    </div>
+    <button id="sound" class="chip" type="button" aria-pressed="false">Sound off</button>
+  </header>
+
+  <div class="bezel">
+    <canvas id="screen" width="256" height="240" aria-label="Game screen"></canvas>
+    <p id="status" class="status">Loading the emulator…</p>
+  </div>
+
+  <section class="pad" aria-label="Controller">
+    <div id="dpad" class="dpad" role="group" aria-label="D-pad">
+      <span class="arm up"></span><span class="arm down"></span>
+      <span class="arm left"></span><span class="arm right"></span>
+      <span class="hub"></span>
+    </div>
+    <div class="meta">
+      <button id="btn-select" class="key pill" type="button" data-btn="SELECT">SELECT</button>
+      <button id="btn-start" class="key pill" type="button" data-btn="START">START</button>
+    </div>
+    <div class="ab">
+      <button id="btn-b" class="key round b" type="button" data-btn="B" aria-label="B, drop bomb">B</button>
+      <button id="btn-a" class="key round a" type="button" data-btn="A" aria-label="A, shoot">A</button>
+    </div>
+  </section>
+
+  <div class="help">
+    <p><b>A</b> shoots. Hold it to keep your aim while you move, so you can strafe. <b>B</b> drops a bomb, which also breaks rocks. <b>Start</b> opens the map.</p>
+    <p class="kbd"><b>Keyboard:</b> arrows or WASD to move, X or K for A, Z or J for B, Enter for Start.</p>
+    <p>This page runs the same ROM file as <b>dist/undercroft.nes</b> in the repository.</p>
+  </div>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/jsnes@1.2.1/dist/jsnes.min.js"></script>
+<script>
+const ROM_B64 = "__ROM__";
+(function () {
+  const status = document.getElementById("status");
+  if (typeof jsnes === "undefined") {
+    status.textContent = "The emulator library didn't load. Check your connection and reload the page.";
+    return;
+  }
+  const W = 256, H = 240;
+  const canvas = document.getElementById("screen");
+  const ctx = canvas.getContext("2d");
+  const image = ctx.getImageData(0, 0, W, H);
+  const raw = new ArrayBuffer(image.data.length);
+  const px8 = new Uint8ClampedArray(raw);
+  const px32 = new Uint32Array(raw);
+
+  const SAMPLES = 8192, MASK = SAMPLES - 1;
+  const audioL = new Float32Array(SAMPLES), audioR = new Float32Array(SAMPLES);
+  let writePos = 0, readPos = 0, soundOn = false, audioCtx = null;
+
+  const nes = new jsnes.NES({
+    onFrame(fb) { for (let i = 0; i < W * H; i++) px32[i] = 0xFF000000 | fb[i]; },
+    onAudioSample(l, r) {
+      if (!soundOn) return;
+      if (((writePos - readPos) & MASK) > 4096) return;
+      audioL[writePos] = l; audioR[writePos] = r;
+      writePos = (writePos + 1) & MASK;
+    }
+  });
+
+  try {
+    nes.loadROM(atob(ROM_B64));
+  } catch (err) {
+    status.textContent = "The ROM failed to load: " + err.message;
+    return;
+  }
+  /* standard NES colours (jsnes ships a palette that turns browns green) */
+  const PALETTE = [0x7C7C7C, 0xFC0000, 0xBC0000, 0xBC2844, 0x840094, 0x2000A8, 0x0010A8, 0x001488, 0x003050, 0x007800, 0x006800, 0x005800, 0x584000, 0x000000, 0x000000, 0x000000, 0xBCBCBC, 0xF87800, 0xF85800, 0xFC4468, 0xCC00D8, 0x5800E4, 0x0038F8, 0x105CE4, 0x007CAC, 0x00B800, 0x00A800, 0x44A800, 0x888800, 0x000000, 0x000000, 0x000000, 0xF8F8F8, 0xFCBC3C, 0xFC8868, 0xF87898, 0xF878F8, 0x9858F8, 0x5878F8, 0x44A0FC, 0x00B8F8, 0x18F8B8, 0x54D858, 0x98F858, 0xD8E800, 0x787878, 0x000000, 0x000000, 0xFCFCFC, 0xFCE4A4, 0xF8B8B8, 0xF8B8D8, 0xF8B8F8, 0xC0A4F8, 0xB0D0F0, 0xA8E0FC, 0x78D8F8, 0x78F8D8, 0xB8F8B8, 0xD8F8B8, 0xFCFC00, 0xF8D8F8, 0x000000, 0x000000];
+  try {
+    nes.ppu.palTable.curTable = PALETTE.slice();
+    nes.ppu.palTable.makeTables();
+    nes.ppu.palTable.setEmphasis(0);
+  } catch (_) {}
+  status.hidden = true;
+
+  /* 60 frames per second, whatever the display refresh rate */
+  const STEP = 1000 / 60;
+  let last = performance.now(), acc = 0;
+  function loop(t) {
+    acc += t - last; last = t;
+    if (acc > 100) acc = STEP;
+    let drew = false;
+    while (acc >= STEP) { nes.frame(); acc -= STEP; drew = true; }
+    if (drew) { image.data.set(px8); ctx.putImageData(image, 0, 0); }
+    requestAnimationFrame(loop);
+  }
+  requestAnimationFrame(loop);
+
+  /* buttons, counted so keyboard and touch can overlap */
+  const C = jsnes.Controller;
+  const MAP = { A: C.BUTTON_A, B: C.BUTTON_B, SELECT: C.BUTTON_SELECT, START: C.BUTTON_START,
+                UP: C.BUTTON_UP, DOWN: C.BUTTON_DOWN, LEFT: C.BUTTON_LEFT, RIGHT: C.BUTTON_RIGHT };
+  const held = {};
+  function press(k) { held[k] = (held[k] || 0) + 1; if (held[k] === 1) nes.buttonDown(1, MAP[k]); }
+  function release(k) { if (!held[k]) return; held[k]--; if (held[k] === 0) nes.buttonUp(1, MAP[k]); }
+
+  let wakeAsked = false;
+  function firstTouch() {
+    if (wakeAsked) return;
+    wakeAsked = true;
+    if (navigator.wakeLock) navigator.wakeLock.request("screen").catch(() => {});
+  }
+
+  const KEYS = { ArrowUp: "UP", ArrowDown: "DOWN", ArrowLeft: "LEFT", ArrowRight: "RIGHT",
+                 KeyW: "UP", KeyS: "DOWN", KeyA: "LEFT", KeyD: "RIGHT",
+                 KeyX: "A", KeyK: "A", KeyZ: "B", KeyJ: "B",
+                 Enter: "START", ShiftLeft: "SELECT", ShiftRight: "SELECT" };
+  const keysDown = new Set();
+  window.addEventListener("keydown", (e) => {
+    const k = KEYS[e.code];
+    if (!k) return;
+    e.preventDefault();
+    if (keysDown.has(e.code)) return;
+    keysDown.add(e.code);
+    press(k);
+  });
+  window.addEventListener("keyup", (e) => {
+    const k = KEYS[e.code];
+    if (!k || !keysDown.has(e.code)) return;
+    keysDown.delete(e.code);
+    release(k);
+  });
+  window.addEventListener("blur", () => {
+    keysDown.forEach((code) => release(KEYS[code]));
+    keysDown.clear();
+  });
+
+  /* D-pad: one finger, 8 directions by angle */
+  const dpad = document.getElementById("dpad");
+  const dirOn = { UP: false, DOWN: false, LEFT: false, RIGHT: false };
+  let dpadPointer = null;
+  function setDirs(list) {
+    for (const k of ["UP", "DOWN", "LEFT", "RIGHT"]) {
+      const on = list.includes(k);
+      if (on === dirOn[k]) continue;
+      dirOn[k] = on;
+      if (on) press(k); else release(k);
+      dpad.classList.toggle("on-" + k.toLowerCase(), on);
+    }
+  }
+  function dirsAt(e) {
+    const r = dpad.getBoundingClientRect();
+    const x = e.clientX - (r.left + r.width / 2);
+    const y = e.clientY - (r.top + r.height / 2);
+    if (Math.hypot(x, y) < r.width * 0.12) return [];
+    const a = Math.atan2(y, x) * 180 / Math.PI;
+    const out = [];
+    if (a > -67.5 && a < 67.5) out.push("RIGHT");
+    if (a > 112.5 || a < -112.5) out.push("LEFT");
+    if (a > 22.5 && a < 157.5) out.push("DOWN");
+    if (a < -22.5 && a > -157.5) out.push("UP");
+    return out;
+  }
+  dpad.addEventListener("pointerdown", (e) => {
+    firstTouch();
+    dpadPointer = e.pointerId;
+    try { dpad.setPointerCapture(e.pointerId); } catch (_) {}
+    setDirs(dirsAt(e));
+    e.preventDefault();
+  });
+  dpad.addEventListener("pointermove", (e) => { if (e.pointerId === dpadPointer) setDirs(dirsAt(e)); });
+  for (const t of ["pointerup", "pointercancel", "lostpointercapture"]) {
+    dpad.addEventListener(t, (e) => { if (e.pointerId === dpadPointer) { dpadPointer = null; setDirs([]); } });
+  }
+
+  document.querySelectorAll("[data-btn]").forEach((el) => {
+    const k = el.dataset.btn;
+    let pid = null;
+    el.addEventListener("pointerdown", (e) => {
+      firstTouch();
+      if (pid !== null) return;
+      pid = e.pointerId;
+      try { el.setPointerCapture(e.pointerId); } catch (_) {}
+      el.classList.add("down");
+      press(k);
+      e.preventDefault();
+    });
+    const up = (e) => {
+      if (e.pointerId !== pid) return;
+      pid = null;
+      el.classList.remove("down");
+      release(k);
+    };
+    el.addEventListener("pointerup", up);
+    el.addEventListener("pointercancel", up);
+    el.addEventListener("lostpointercapture", up);
+    el.addEventListener("contextmenu", (e) => e.preventDefault());
+  });
+
+  /* sound starts only after a tap, as browsers require */
+  const soundBtn = document.getElementById("sound");
+  soundBtn.addEventListener("click", () => {
+    if (!audioCtx) {
+      const AC = window.AudioContext || window.webkitAudioContext;
+      if (!AC) { soundBtn.textContent = "No sound here"; soundBtn.disabled = true; return; }
+      audioCtx = new AC();
+      const node = audioCtx.createScriptProcessor(1024, 0, 2);
+      node.onaudioprocess = (ev) => {
+        const L = ev.outputBuffer.getChannelData(0), R = ev.outputBuffer.getChannelData(1);
+        for (let i = 0; i < L.length; i++) {
+          if (readPos !== writePos) { L[i] = audioL[readPos]; R[i] = audioR[readPos]; readPos = (readPos + 1) & MASK; }
+          else { L[i] = 0; R[i] = 0; }
+        }
+      };
+      node.connect(audioCtx.destination);
+      try { nes.papu.setSampleRate(audioCtx.sampleRate, false); } catch (_) {}
+    }
+    soundOn = !soundOn;
+    if (soundOn) audioCtx.resume();
+    soundBtn.setAttribute("aria-pressed", String(soundOn));
+    soundBtn.textContent = soundOn ? "Sound on" : "Sound off";
+  });
+})();
+</script>

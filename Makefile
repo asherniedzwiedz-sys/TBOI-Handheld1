@@ -7,7 +7,7 @@ AFLAGS  := -t nes --bin-include-dir $(BUILD)
 
 ROM     := $(BUILD)/$(NAME).nes
 
-all: $(ROM)
+all: $(ROM) $(BUILD)/$(NAME)-web.html
 
 $(BUILD):
 	mkdir -p $(BUILD)
@@ -34,7 +34,14 @@ $(ROM): $(BUILD)/crt0.o $(BUILD)/main.o $(BUILD)/fast.o src/nrom.cfg
 	ld65 -C src/nrom.cfg -o $@ -m $(BUILD)/$(NAME).map -Ln $(BUILD)/$(NAME).labels \
 		$(BUILD)/crt0.o $(BUILD)/main.o $(BUILD)/fast.o nes.lib
 
+$(BUILD)/$(NAME)-web.html: web/player.html $(ROM) tools/mkweb.py
+	python3 tools/mkweb.py web/player.html $(ROM) $@
+
+dist: all
+	mkdir -p dist
+	cp $(ROM) $(BUILD)/$(NAME)-web.html dist/
+
 clean:
 	rm -rf $(BUILD)
 
-.PHONY: all clean
+.PHONY: all clean dist

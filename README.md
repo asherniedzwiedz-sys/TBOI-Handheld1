@@ -49,6 +49,10 @@ your aim is the substitute.
 It runs in any NES emulator: Mesen or FCEUX on PC, an NES emulator app on a
 phone, or a cheap Linux handheld (copy the file to its SD card).
 
+`dist/undercroft-web.html` is a single-file browser player with touch
+controls. Open it in a browser; it loads the
+[jsnes](https://github.com/bfirsh/jsnes) emulator from a CDN.
+
 ## Putting it on the handheld
 
 This is the hard part, and it needs hardware work. The game runs from the
@@ -73,7 +77,8 @@ sudo apt-get install cc65
 make
 ```
 
-The output is `build/undercroft.nes`.
+The outputs are `build/undercroft.nes` and `build/undercroft-web.html`.
+`make dist` copies both into `dist/`.
 
 ## Tests
 
@@ -117,4 +122,5 @@ The tests cover:
 | `tools/mkchr.py` | Converts the ASCII art into CHR-ROM |
 | `tools/mkrooms.py` | Converts the layouts and checks every door is reachable |
 | `tests/` | Emulator-driven tests |
+| `web/player.html` | Browser player page (`make` embeds the ROM into it) |
 | `docs/FLASHING.md` | Hardware guide |
